@@ -209,6 +209,35 @@ async function run() {
       res.send(followers)
     }) 
 
+    // My following
+    app.post('/users/user/following/details', async(req, res)=>{
+      const {ids} = req.body;
+      const objectIds = ids.map(id => new ObjectId(id));
+      const users = await usersCollection.find({_id:{$in: objectIds}}).project({name:1, image:1, email:1}).toArray();
+      res.send(users);
+    })
+
+    // Follow others
+    app.patch('/users/user/follow/:email', async(req, res)=> {
+      const email = req.params.email;
+      const {followingId} = req.body;
+      const filter ={email:email}
+      const user = await usersCollection.findOne(filter);
+      const alreadyFollow = user.following.includes(followingId);
+      if (!followingId) {
+        return res.status(400).send({ message: "followingId is required" });
+      }
+      if(!user){
+        return res.status(404).send({message: "User not Found"})
+      }
+      if(!alreadyFollow){
+        await usersCollection.updateOne(filter, {$push:{following:followingId}})
+      }else{
+        await usersCollection.updateOne(filter, {$pull:{following:followingId}})
+      }
+      res.send({success:true, following: !alreadyFollow})
+    })
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
