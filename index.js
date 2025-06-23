@@ -103,7 +103,7 @@ async function run() {
       res.send(result);
     })
 
-    // visit user profile
+    // visited user profile
     app.get('/users/user/visit/:id', async(req, res)=> {
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)};
@@ -226,7 +226,14 @@ async function run() {
         {projection:{name:1, image:1, email:1}}
        ).toArray();
       res.send(followers)
-    }) 
+    })
+
+    // Visited Profile follower
+    app.get('/users/user/visit/:id/followers', async(req, res)=>{
+      const visitedId = req.params.id;
+      const followers = await usersCollection.find({following: visitedId}, {projection:{name:1, image:1, email:1}}).toArray();
+      res.send(followers);
+    })
 
     // My following
     app.post('/users/user/following/details', async(req, res)=>{
@@ -234,6 +241,14 @@ async function run() {
       const objectIds = ids.map(id => new ObjectId(id));
       const users = await usersCollection.find({_id:{$in: objectIds}}).project({name:1, image:1, email:1}).toArray();
       res.send(users);
+    })
+
+    // user data update
+    app.patch('/users/user/update/:email', verifyToken, async(req, res)=>{
+      const email = req.params.email;
+      const updateData = req.body;
+      const result = await usersCollection.updateOne({email:email}, {$set:updateData});
+      res.send(result);
     })
 
     // Follow others
