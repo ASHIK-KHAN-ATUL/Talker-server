@@ -132,11 +132,30 @@ async function run() {
       res.send(result);
     })
 
+    // get post from visited profile
+    app.get('/posts/user/visit/:id', verifyToken, async(req, res)=>{
+      const visitedId = req.params.id;
+      const filter = {author_id: visitedId}
+      const result = await postsCollection.find(filter).sort({postCreateAt: -1}).toArray();
+      res.send(result);
+    })
+
     // get only image from mypost
     app.get('/posts/image/user/:email', verifyToken, async(req, res)=> {
       const email = req.params.email;
       const filter = {
         authorEmail: email,
+        postImage: {$exists: true, $ne:""}
+      };
+      const result = await postsCollection.find(filter).sort({postCreateAt: -1}).toArray();
+      res.send(result);
+    })
+
+    // get only image from visited Profile 
+    app.get('/posts/image/user/visit/:id', verifyToken, async(req,res)=>{
+      const visitedId = req.params.id;
+      const filter = {
+        author_id: visitedId,
         postImage: {$exists: true, $ne:""}
       };
       const result = await postsCollection.find(filter).sort({postCreateAt: -1}).toArray();
